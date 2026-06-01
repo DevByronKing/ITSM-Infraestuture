@@ -170,6 +170,47 @@ export default function AtivosPage() {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (selectedAssetsIds.size === 0) return;
+        if (!confirm(`Tem certeza que deseja excluir ${selectedAssetsIds.size} ativo(s) permanentemente?`)) return;
+
+        setIsSaving(true);
+        const { error } = await supabase.from('ativos').delete().in('id', Array.from(selectedAssetsIds));
+        setIsSaving(false);
+
+        if (error) {
+            console.error('Erro ao excluir em lote:', error);
+            alert('Falha ao excluir os ativos.');
+        } else {
+            setSelectedAssetsIds(new Set());
+            setSelectedAsset(null);
+            fetchAssets();
+        }
+    };
+
+    const handleExportExcel = () => {
+        if (filteredAssets.length === 0) return;
+        
+        const dataToExport = filteredAssets.map(a => ({
+            'Nome/Hostname': a.name,
+            'Categoria': a.category,
+            'Marca': a.brand,
+            'Modelo': a.model,
+            'Status': a.status,
+            'Localização': a.location,
+            'Responsável': a.responsible_user,
+            'IP': a.ip_address,
+            'MAC': a.mac_address,
+            'Etiqueta': a.has_label ? 'Impressa' : 'Pendente'
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Inventário");
+        
+        XLSX.writeFile(workbook, `Inventario_Ativos_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     const handleExportReport = () => {
         if (filteredAssets.length === 0) return;
 
@@ -446,16 +487,23 @@ export default function AtivosPage() {
                 </div>
                 <div className="flex gap-3 w-full md:w-auto">
                     <button
+                        onClick={handleExportExcel}
+                        className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center justify-center gap-2"
+                        title="Exportar para Excel (.xlsx)"
+                    >
+                        <Download size={18} className="text-emerald-600" />
+                    </button>
+                    <button
                         onClick={handleExportReport}
                         className="bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center gap-2"
                     >
                         <FileText size={18} />
-                        Exportar Relatório
+                        Relatório PDF
                     </button>
                     <button
                         onClick={() => {
                             setEditingId(null);
-                            setFormData({ name: '', category: 'Computador', brand: '', model: '', mac_address: '', ip_address: '', condition: 'Novo', location: '', responsible_user: '', has_label: false, quantity: 1 });
+                            setFormData({ name: '', category: 'Computador', brand: '', model: '', mac_address: '', ip_address: '', condition: 'Novo', location: '', responsible_user: '', has_label: false, quantity: 1, status: 'Ativo', purchase_date: '', warranty_date: '' });
                             setIsAddModalOpen(true);
                         }}
                         className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-[0_4px_14px_0_rgba(99,102,241,0.39)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.5)] flex items-center gap-2 transform hover:-translate-y-0.5 whitespace-nowrap"
@@ -478,6 +526,14 @@ export default function AtivosPage() {
                             className="px-4 py-2 text-indigo-600 hover:bg-indigo-100 rounded-lg text-sm font-medium transition"
                         >
                             Limpar Seleção
+                        </button>
+                        <button
+                            onClick={handleBulkDelete}
+                            disabled={isSaving}
+                            className="bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+                        >
+                            <Trash2 size={16} />
+                            Excluir {selectedAssetsIds.size}
                         </button>
                         <button
                             onClick={() => {

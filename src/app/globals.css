@@ -37,10 +37,101 @@
 }
 
 body {
-  background-color: #f8fafc;
+  background-color: var(--bg-base);
   background-image:
     radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 0.03) 0, transparent 50%),
     radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.03) 0, transparent 50%),
     radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.03) 0, transparent 50%);
   background-attachment: fixed;
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+:root {
+  --elis-primary: #004F9F;
+  --elis-cyan: #00B5E2;
+  --bg-base: #F4F7FB;
+  --bg-surface: #FFFFFF;
+  --text-primary: #1e293b;
+  --border-color: #E2E8F0;
+}
+
+.dark-mode {
+  --elis-primary: #004F9F; /* Fixo corporativo */
+  --elis-cyan: #00B5E2;
+  --bg-base: #0f172a;
+  --bg-surface: #1e293b;
+  --text-primary: #f1f5f9;
+  --border-color: #2d3d52;
+}
+
+/* pulse-cone animations for the Digital Twin */
+@keyframes pulse-cone {
+  0% {
+    transform: scale(0.8) translateY(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2) translateY(20px);
+    opacity: 0;
+  }
+}
+
+.rf-cone {
+  background: radial-gradient(circle at top, var(--elis-cyan) 0%, transparent 70%);
+  animation: pulse-cone 2s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rf-cone-alt {
+  animation-delay: 1s;
+}
+
+/* Impressão Inteligente (@media print) */
+@media print {
+  @page {
+    margin: 20mm;
+  }
+
+  body {
+    background: none !important;
+    background-color: white !important;
+    color: black !important;
+  }
+
+  body::before {
+    content: "ELIS — BASE DE CONHECIMENTO RFID | Circular Services At Work";
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border-bottom: 1px solid black;
+    padding-bottom: 5px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Oculta elementos que não devem ser impressos */
+  .no-print, nav, aside, button, .rfid-sidebar {
+    display: none !important;
+  }
+
+  /* Garante que conteúdo seja impresso inteiro */
+  .print-avoid-break {
+    page-break-inside: avoid;
+    page-break-after: avoid;
+  }
+
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+}
+
+.print-only {
+  display: none;
 }
